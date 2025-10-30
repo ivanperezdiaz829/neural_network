@@ -1,3 +1,3 @@
-# NEURAL_NETWORK
+# NEURONAL NETWORK
 
-hola buuenas tardes
+Hola buenas tardes
