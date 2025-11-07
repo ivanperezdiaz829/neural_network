@@ -1,5 +1,6 @@
-# NEURAL_NETWORK
+# NEURONAL NETWORK
 
+<<<<<<< HEAD
 DESCRIPCIÓN:
 
     El objetivo que se espera lograr con esta primera práctica de la asignatura Fundamentos de los Sistemas Inteligentes es la comparación de redes neurales con distintas características. Para ello se emplean funciones de la librería PyTorch que nos permiten crear capas de neuronas, así como utilizar facilmente funciones de activación (RELU, Sigmoid), funciones de perdida (MSELoss, CrossEntropyLoss) y optimizadores (SGD, Adam).
@@ -47,3 +48,6 @@ CANCIÓN:
         que lento entrena la red neuronal,
         Si poooooooongo
         un valor bajo de learning rate.
+=======
+Hola buenas tardes
+>>>>>>> 0e106b588e5f3d9147435c595c9c8e930d15d2b4
