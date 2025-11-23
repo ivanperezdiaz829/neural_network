@@ -1,6 +1,6 @@
-train: C:/Users/ivanp/Desktop/traffic_signals/TGC_RBNW/train/images
-val: C:/Users/ivanp/Desktop/traffic_signals/TGC_RBNW/val/images
-test: C:/Users/ivanp/Desktop/traffic_signals/TGC_RBNW/test/images
+train: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/train/images
+val: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/valid/images
+test: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/test/images
 
 nc: 14
 names: [
@@ -9,10 +9,3 @@ names: [
   'Speed Limit 50', 'Speed Limit 60', 'Speed Limit 70', 'Speed Limit 80',
   'Speed Limit 90', 'Stop'
 ]
-
-roboflow:
-  workspace: selfdriving-car-qtywx
-  project: self-driving-cars-lfjou
-  version: 6
-  license: CC BY 4.0
-  url: https://universe.roboflow.com/selfdriving-car-qtywx/self-driving-cars-lfjou/dataset/6

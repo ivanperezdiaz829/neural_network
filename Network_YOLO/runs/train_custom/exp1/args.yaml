@@ -1,16 +1,16 @@
 task: detect
 mode: train
-model: yolo11n.pt
+model: yolo11m.pt
 data: data.yaml
-epochs: 40
+epochs: 50
 time: null
 patience: 100
-batch: 4
-imgsz: 416
+batch: 16
+imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: cpu
+device: null
 workers: 8
 project: runs/train_custom
 name: exp1
@@ -103,4 +103,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: C:\Users\ivanp\Desktop\Visión por Computador\Computer_Vision\VC_P4\runs\train_custom\exp1
+save_dir: C:\Users\ivanp\Desktop\FSI\Neural_Network\Network_YOLO\runs\train_custom\exp1
