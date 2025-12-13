@@ -1,2 +1,2 @@
 # Esconder archivos de modelo PyTorch
-*.pth
+**.pth
