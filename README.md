@@ -1,16 +1,279 @@
-# **NEURONAL NETWORK**
+# **NEURONAL NETWORKS**
 
-## DESCRIPCIÓN:
+## ÍNDICE
 
-El objetivo que se espera lograr con esta primera práctica de la asignatura Fundamentos de los Sistemas Inteligentes es la comparación de redes neurales con distintas características. Para ello se emplean funciones de la librería PyTorch que nos permiten crear capas de neuronas, así como utilizar facilmente funciones de activación (RELU, Sigmoid), funciones de perdida (MSELoss, CrossEntropyLoss) y optimizadores (SGD, Adam).
+- [Descripción del Proyecto](#descripción-del-proyecto)
+- [Estructura del Repositorio](#estructura-del-repositorio)
+- [DataSet y Características](#dataset-y-características)
+- [Preparación del Entorno](#preparación-del-entorno)
+- Comparativa de Redes Simples.
+- Comparatica de Redes Convolucionales.
+- Detector de YOLO con pruebas en vídeo.
 
-## DATASET ELEGIDO:
+## DESCRIPCIÓN DEL PROYECTO
 
-Con el propósito de entrenar las redes para la detección de señales de tráfico hemos utilizado este dataset que contiene imágenes de 15 clases distintas de semáforos y señales:
+El proyecto consiste en la **creación y posterior comparación** entre diferentes redes neuronales de diferentes tipos con el objetivo de llevar a cabo clasificación de imágenes obtenidas a partir de un DataSet de señales de tráfico extraído de **Kaggle** ([pkdarabi/cardetection](https://www.kaggle.com/datasets/pkdarabi/cardetection)).
+
+Se busca **comparar el rendimiento y desempeño** entre dos **redes neuronales simples** diferentes además de comparar dos **CNNs** (*Convolutional Neural Networs*, Redes neuronales convolucionales) diferentes entre ellas y finalmente comparar ambos tipos de redes para obtener una vista general y poder **sacar conclusiones al respecto**.
+
+Como **última sección del proyecto**, se dispondrá de una Red entrenada haciendo uso del detector de imágenes [YOLO](https://docs.ultralytics.com/es/) con las mismas clases que se han entrenado los clasificadores anteriormente mencionados, esto es para obtener un resultado visual de detección de imagen en un vídeo con las clases de los clasificadores (*Computer Vision*) aunque sin uso más allá en la comparativa anteriormente mencionada entre los clasificadores basados en las redes simples y las CNNs.
+
+Con el fin de mantener un **entorno controlado y equitativo** para los entrenamientos de las redes neuronales, se ha decidio entrenar todas las redes con la misma tarjeta gráfica, así como la misma cantidad de épocas de entrenamiento que se ha fijado a **50 épocas totales** (aunque se aplica *early stopping* por si se suceden muchas épocas sin mejora).
+
+## ESTRUCTURA DEL REPOSITORIO
+
+La estructura del repositorio consta de **1 carpeta raíz con los CSVs** (*Comma-Separated Values*) de los datos a usar, además de otras 3 carpetas principales que contienen el código de entrenamiento de las **Redes Neuronales** con sus correspondientes carpetas de resultados y utilidades:
+
+Carpeta **CSVs** con sus contenido:
+```raw
+> CSVs
+    - labels_test.csv
+    - labels_train.csv
+    - labels_valid.csv
+    - test_corregido.csv
+    - train_corregido.csv
+    - valid_corregido.csv
+```
+
+Carpeta **Network_Convolutional** con sus contenidos:
+```raw
+> Network_Convolutional
+    > results
+        - grafica_accuracy_custom.png
+        - grafica_accuracy.png
+        - grafica_loss_custom.png
+        - grafica_loss.png
+        - matriz_confusion_custom.png
+        - matriz_confusion.png
+        - training_history_custom.csv
+        - training_history.csv
+        - (Entrenamientos .pth no subidos al repo para ahorrar espacio)
+    - Network_Convolutional.ipynb
+    - Network_Convolutional2.ipynb
+```
+
+Carpeta **Network_Simple** con sus contenidos:
+```raw
+> Network_Simple
+    > results
+        - grafica_accuracy_simple1.png
+        - grafica_accuracy_simple2.png
+        - grafica_loss_simple1.png
+        - grafica_loss_simple2.png
+        - matriz_confusion_simple1.png
+        - matriz.confusion_simple2.png
+        - training_history_simple1.csv
+        - training_history_simple2.csv
+        - (Entrenamientos .pth no subidos al repo para ahorrar espacio)
+    - Network_Simple.ipynb
+    - Network_Simple2.ipynb
+```
+
+Carpeta **Network_YOLO** con sus contenidos:
+```raw
+> Network_YOLO
+    > outputs
+        - tracking_result_YOLO.mp4
+    > Resources
+        - test.mp4
+    > runs
+        > detect
+            > val
+                - BoxF1_curve.png
+                - BoxP_curve.png
+                - BoxPR_curve.png
+                - BoxR_curve.png
+                - confusion_matrix_normalized.png
+                - confusion_matrix.png
+                - predictions.json
+                - (Valores de labels en los batch)
+        > train_custom
+            > exp1
+                > weights
+                    - best.pt
+                    - last.pt
+                - args.yaml
+                - BoxF1_curve.png
+                - BoxP_curve.png
+                - BoxPR_curve.png
+                - BoxR_curve.png
+                - confusion_matrix_normalized.png
+                - confusion_matrix.png
+                - labels.jpg
+                - results.csv
+                - results.png
+                - (Valores de labels en los batch)
+    - data.yaml
+    - tracking_results.csv
+    - YOLO_Network.ipynb
+    - YOLO.mp3
+    - yolo11m.pt
+```
+
+## DATASET Y CARACTERÍSTICAS
+
+Con el propósito de entrenar las redes neuronales, se ha hecho uso, como se mencionó en la [descripción del proyecto](#descripción-del-proyecto) de un DataSet sacado directamente de Kaggle, dicho dataset está preparado para su uso en tareas de *Computer Vision* haciendo uso de [YOLO](https://docs.ultralytics.com/es/) (Véase [Detector de YOLO con pruebas en vídeo](#detector-de-yolo-con-pruebas-en-vídeo)). El DataSet a utilizar es el siguiente:
 
 - https://www.kaggle.com/datasets/pkdarabi/cardetection
-    
-Contamos con 3 directorios (train, test, valid) y cada uno de ellos tiene una carpeta para las imágenes y otra para las etiquetas. El tamaño de las imágenes es de 416x416 píxeles.
+
+El mencionado DataSet cuenta con 3 directorios llamados train, test y valid y cada uno de ellos posee una carpeta para las imágenes y otra para los *labels* en [formato YOLO](https://docs.ultralytics.com/datasets/detect/) y con un total de 15 clases:
+
+- **Green Light** 
+- **Red Light** 
+- **Speed Limit 10** -> Esta se elimina (Véase [Preparación del Entorno](#preparación-del-entorno))
+- **Speed Limit 100**
+- **Speed Limit 110**
+- **Speed Limit 120**
+- **Speed Limit 20**
+- **Speed Limit 30**
+- **Speed Limit 40**
+- **Speed Limit 50**
+- **Speed Limit 60**
+- **Speed Limit 70**
+- **Speed Limit 80**
+- **Speed Limit 90**
+- **Stop**
+
+Las **imágenes del DataSet** cuentan con un tamaño de **416x416 píxeles** y con una división de imágenes dentro de sus carpetas correspondientes y de manera total que se puede observar en la siguiente tabla:
+
+| Label | Test Images | Train Images | Valid Images | Total Images |
+| :---: | :---------: | :----------: | :----------: | :----------: |
+|   0   |     110     |     542      |      122     |      774     |
+|   1   |      94     |     585      |      108     |      787     |
+|   2   |       3     |      19      |      0       |      22      |
+|   3   |      46     |     267      |      52      |      365     |
+|   4   |      21     |     101      |      17      |      139     |
+|   5   |      44     |     252      |      60      |      356     |
+|   6   |      46     |     285      |      56      |      387     |
+|   7   |      60     |     334      |      74      |      468     |
+|   8   |      53     |     235      |      55      |      343     |
+|   9   |      50     |     283      |      71      |      404     |
+|  10   |      45     |     301      |      76      |      422     |
+|  11   |      53     |     318      |      78      |      449     |
+|  12   |      61     |     323      |      56      |      440     |
+|  13   |      34     |     168      |      38      |      240     |
+|  14   |      50     |     285      |      81      |      416     |
+
+
+## PREPARACIÓN DEL ENTORNO
+
+Para la realización del proyecto, primeramente se han de descargar una serie de paquetes, requisitos y dependencias, para ello, y con el propósito de aislar las descargas y por consiguiente evitar incompatibilidades con otros paquetes, se ejecuta el siguiente **Script** desde **Anaconda Prompt** para la creación de un *environment* especializado para el proyecto.
+
+```bash
+# Creación del environment de Anaconda
+conda create --name NN python=3.11.5
+conda activate NN
+
+# Para entrenar con GPU NVIDIA
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Resto de dependencias del proyecto
+pip install pandas 
+pip install numpy
+pip install matplotlib 
+pip install seaborn
+pip install scikit-learn
+pip install tqdm
+pip install pillow
+pip install kagglehub
+pip install lapx
+pip install ultralytics
+```
+
+De manera adicional, **se han de tratar los datos del DataSet** descargado dado que la clase de **índice 2 tiene muy pocas imágenes**, incluso no teniendo ninguna imagen dentro del conjunto de imagenes de validación lo que **ocasiona problemas** durante el entrenamiento y genera confusión, empeorando así el desempeño de las propias redes neuronales.
+
+Para limpiar la clase en cuestión, el repositorio cuenta con un documento en la raíz llamado `new_csv.py`que contiene el siguiente **Script** de borrado:
+
+```python
+import csv
+
+def procesar_csv(archivo_entrada, archivo_salida):
+    print(f"\n--- Iniciando procesamiento de: '{archivo_entrada}' ---")   
+    filas_eliminadas = 0
+    filas_modificadas = 0
+    filas_totales_escritas = 0
+
+    try:
+        with open(archivo_entrada, mode='r', newline='') as infile, \
+             open(archivo_salida, mode='w', newline='') as outfile:
+            reader = csv.reader(infile)
+            writer = csv.writer(outfile)
+
+            try:
+                header = next(reader)
+                writer.writerow(header)
+            except StopIteration:
+                print(f"Error: El archivo '{archivo_entrada}' está vacío.")
+                return
+
+            for row in reader:
+                if not row:
+                    continue
+                try:
+                    clase_index = int(row[1])                 
+                    if clase_index == 2:
+                        filas_eliminadas += 1
+                        continue
+                    elif clase_index > 2:
+                        clase_index -= 1
+                        filas_modificadas += 1
+                        row[1] = str(clase_index) 
+                    writer.writerow(row)
+                    filas_totales_escritas += 1
+
+                except ValueError:
+                    print(f"Advertencia: Se omitió una fila mal formada (índice no numérico): {row}")
+                except IndexError:
+                    print(f"Advertencia: Se omitió una fila mal formada (faltan columnas): {row}")
+
+        print(f"Resultados guardados en: '{archivo_salida}'")
+        print(f"Filas eliminadas: {filas_eliminadas}")
+        print(f"Filas re-mapeadas: {filas_modificadas}")
+        print(f"Total de filas escritas: {filas_totales_escritas}")
+
+    except FileNotFoundError:
+        print(f"Error: No se encontró el archivo de entrada '{archivo_entrada}'.")
+    except Exception as e:
+        print(f"Ocurrió un error inesperado con '{archivo_entrada}': {e}")
+
+archivos_a_procesar = [
+    ('./CSVs/labels_train.csv', './CSVs/train_corregido.csv'),
+    ('./CSVs/labels_valid.csv', './CSVs/valid_corregido.csv'),
+    ('./CSVs/labels_test.csv', './CSVs/test_corregido.csv')
+]
+print("Iniciando el procesamiento de todos los archivos...")
+
+for entrada, salida in archivos_a_procesar:
+    procesar_csv(entrada, salida)
+
+print("\n--- ¡Proceso de todos los archivos completado! ---")
+```
+Adicionalmente y por simplicidad, se ha decidio agregar el anterior **Script** a cada uno de los *Jupyter Notebooks* de cada red neuronal.
+
+Tras el **Script** de limpiado, el estado del DataSet con el que se va a trabajar es el siguiente:
+
+| Label | Test Images | Train Images | Valid Images | Total Images |
+| :---: | :---------: | :----------: | :----------: | :----------: |
+|   0   |     110     |      542     |      122     |      774     |
+|   1   |      94     |      585     |      108     |      787     |
+|   2   |      46     |      267     |      52      |      365     |
+|   3   |      21     |      101     |      17      |      139     |
+|   4   |      44     |      252     |      60      |      356     |
+|   5   |      46     |      285     |      56      |      387     |
+|   6   |      60     |      334     |      74      |      468     |
+|   7   |      53     |      235     |      55      |      343     |
+|   8   |      50     |      283     |      71      |      404     |
+|   9   |      45     |      301     |      76      |      422     |
+|   10  |      53     |      318     |      78      |      449     |
+|   11  |      61     |      323     |      56      |      440     |
+|   12  |      34     |      168     |      38      |      240     |
+|   13  |      50     |      285     |      81      |      416     |
+
+Nótese que ahora hay **una fila menos**, esto es porque el **Script** borra el rastro de la anterior clase de índice 2 y reestructura todos los datos para que los *labels* estén ordenados.
+
+====================================================================
+# EMPEZAR DESDE AQUÍ 23/12/2025
+====================================================================
 
 ## TIPOS DE REDES NEURONALES:
 
@@ -20,6 +283,8 @@ Contamos con 3 directorios (train, test, valid) y cada uno de ellos tiene una ca
 Para el primer diseño hemos creado una red neuronal con dos capas ocultas (512 y 128 neuronas), y una capa de salida de 15 clases. Como función de activación hemos usado la sigmoide puesto que fue la que vimos en primer lugar en clase de teoría, y en la capa de salida aplicamos softmax. 
 </div>
 
+
+## DETECTOR DE YOLO CON PRUEBAS EN VÍDEO
 
 ## CANCIÓN:
 
