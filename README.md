@@ -6,25 +6,25 @@
 - [Estructura del Repositorio](#estructura-del-repositorio)
 - [DataSet y Características](#dataset-y-características)
 - [Preparación del Entorno](#preparación-del-entorno)
-- Comparativa de Redes Simples.
-- Comparatica de Redes Convolucionales.
+- [Comparativa entre Redes Simples](#comparativa-entre-redes-simples)
+- Comparativa de Redes Convolucionales.
 - Detector de YOLO con pruebas en vídeo.
 
 ## DESCRIPCIÓN DEL PROYECTO
 
-El proyecto consiste en la **creación y posterior comparación** entre diferentes redes neuronales de diferentes tipos con el objetivo de llevar a cabo clasificación de imágenes obtenidas a partir de un DataSet de señales de tráfico extraído de **Kaggle** ([pkdarabi/cardetection](https://www.kaggle.com/datasets/pkdarabi/cardetection)).
+El proyecto consiste en la **creación y posterior comparación** entre diferentes redes neuronales de diferentes tipos con el objetivo de llevar a cabo la clasificación de un grupo de imágenes obtenidas a partir de un DataSet de señales de tráfico extraído de **Kaggle** ([pkdarabi/cardetection](https://www.kaggle.com/datasets/pkdarabi/cardetection)).
 
-Se busca **comparar el rendimiento y desempeño** entre dos **redes neuronales simples** diferentes además de comparar dos **CNNs** (*Convolutional Neural Networs*, Redes neuronales convolucionales) diferentes entre ellas y finalmente comparar ambos tipos de redes para obtener una vista general y poder **sacar conclusiones al respecto**.
+Se busca **comparar el rendimiento y desempeño** entre dos **redes neuronales simples** diferentes, además de comparar dos **CNNs** (*Convolutional Neural Networs*, Redes neuronales convolucionales) diferentes entre ellas y finalmente, comparar ambos tipos de redes para obtener una vista general y poder **sacar conclusiones al respecto**.
 
 Como **última sección del proyecto**, se dispondrá de una Red entrenada haciendo uso del detector de imágenes [YOLO](https://docs.ultralytics.com/es/) con las mismas clases que se han entrenado los clasificadores anteriormente mencionados, esto es para obtener un resultado visual de detección de imagen en un vídeo con las clases de los clasificadores (*Computer Vision*) aunque sin uso más allá en la comparativa anteriormente mencionada entre los clasificadores basados en las redes simples y las CNNs.
 
-Con el fin de mantener un **entorno controlado y equitativo** para los entrenamientos de las redes neuronales, se ha decidio entrenar todas las redes con la misma tarjeta gráfica, así como la misma cantidad de épocas de entrenamiento que se ha fijado a **50 épocas totales** (aunque se aplica *early stopping* por si se suceden muchas épocas sin mejora).
+Con el fin de mantener un **entorno controlado y equitativo** para los entrenamientos de las redes neuronales, se ha decidido entrenar todas las redes con la misma tarjeta gráfica, así como la misma cantidad de épocas de entrenamiento que se ha fijado a **50 épocas totales** (aunque se aplica *early stopping* por si se suceden muchas épocas sin mejora).
 
 ## ESTRUCTURA DEL REPOSITORIO
 
 La estructura del repositorio consta de **1 carpeta raíz con los CSVs** (*Comma-Separated Values*) de los datos a usar, además de otras 3 carpetas principales que contienen el código de entrenamiento de las **Redes Neuronales** con sus correspondientes carpetas de resultados y utilidades:
 
-Carpeta **CSVs** con sus contenido:
+Carpeta **CSVs** con sus contenidos:
 ```raw
 > CSVs
     - labels_test.csv
@@ -112,7 +112,7 @@ Carpeta **Network_YOLO** con sus contenidos:
 
 ## DATASET Y CARACTERÍSTICAS
 
-Con el propósito de entrenar las redes neuronales, se ha hecho uso, como se mencionó en la [descripción del proyecto](#descripción-del-proyecto) de un DataSet sacado directamente de Kaggle, dicho dataset está preparado para su uso en tareas de *Computer Vision* haciendo uso de [YOLO](https://docs.ultralytics.com/es/) (Véase [Detector de YOLO con pruebas en vídeo](#detector-de-yolo-con-pruebas-en-vídeo)). El DataSet a utilizar es el siguiente:
+Con el propósito de entrenar las redes neuronales se ha hecho uso, como se mencionó en la [descripción del proyecto](#descripción-del-proyecto) de un DataSet sacado directamente de Kaggle, dicho dataset está preparado para su uso en tareas de *Computer Vision* haciendo uso de [YOLO](https://docs.ultralytics.com/es/) (Véase [Detector de YOLO con pruebas en vídeo](#detector-de-yolo-con-pruebas-en-vídeo)). El DataSet a utilizar es el siguiente:
 
 - https://www.kaggle.com/datasets/pkdarabi/cardetection
 
@@ -248,7 +248,7 @@ for entrada, salida in archivos_a_procesar:
 
 print("\n--- ¡Proceso de todos los archivos completado! ---")
 ```
-Adicionalmente y por simplicidad, se ha decidio agregar el anterior **Script** a cada uno de los *Jupyter Notebooks* de cada red neuronal.
+Adicionalmente y por simplicidad, se ha decidido agregar el anterior **Script** a cada uno de los *Jupyter Notebooks* de cada red neuronal.
 
 Tras el **Script** de limpiado, el estado del DataSet con el que se va a trabajar es el siguiente:
 
@@ -271,9 +271,104 @@ Tras el **Script** de limpiado, el estado del DataSet con el que se va a trabaja
 
 Nótese que ahora hay **una fila menos**, esto es porque el **Script** borra el rastro de la anterior clase de índice 2 y reestructura todos los datos para que los *labels* estén ordenados.
 
-====================================================================
-# EMPEZAR DESDE AQUÍ 23/12/2025
-====================================================================
+## COMPARATIVA ENTRE REDES SIMPLES
+
+Se han creado 2 redes Simples haciendo uso de *[PyTorch](https://pytorch.org)* con sus respectivas cualidades y características para comprobar la variación en la calidad de las mismas.
+
+La primera de las Redes Neuronales Simples ([Network_Simple.ipynb](./Network_Simple/Network_Simple.ipynb)) aplica el siguiente tratado de imágenes:
+
+- Se define el tamaño de las imágenes: **416x416 píxeles**.
+
+- Se convierten las imágenes de entrenamiento a **escala de grises** pero se mantienen los 3 canales de salida para que el formato numérico sea **idéntico a una imagen a color** y luego se **normaliza el valor** de los píxeles entre -1 y 1.
+
+- La transformación de las imágenes de validación solo redimensiona y normaliza sin pasar a escala de grises.
+
+En cuanto a la clase DataSet (necesaria para entrenar redes con *[PyTorch](https://pytorch.org)*) realiza lo siguiente:
+
+- Busca la imagen en el disco.
+- Si la imagen está corrupta, devuelve una imagen negra para evitar que el entrenamiento falle.
+- Busca la etiqueta (clase) en el DataFrame agrupado.
+- Aplica las transformaciones y devuelve el par `(imagen, etiqueta)`.
+
+A continuación y en otro fragmento, se aplica al conjunto de datos la modificación de los datos mencionados antes en el **Script** de eliminación de la clase de índice 2 (Véase [Preaparación del Entorno](#preparación-del-entorno) y/o el [Script](new_csv.py)).
+
+Con los preparativos previos, la definición del **Modelo SimpleNN** que define el cerebro artificial de la arquitectura queda de la siguiente manera:
+
+```python
+# === FRAGMENTO 4 ===
+class SimpleNN(nn.Module):
+    def __init__(self, num_classes=14):
+        super(SimpleNN, self).__init__()
+        
+        # Cálculo automático del tamaño aplanado
+        self.flatten_size = 3 * 416 * 416 
+        
+        # Arquitectura Piramidal (Reduciendo progresivamente)
+        self.fc1 = nn.Linear(self.flatten_size, 512) 
+        self.bn1 = nn.BatchNorm1d(512) # BatchNorm ayuda mucho en redes simples profundas
+        
+        self.fc2 = nn.Linear(512, 256)
+        self.bn2 = nn.BatchNorm1d(256)
+        
+        self.fc3 = nn.Linear(256, 128)
+        self.bn3 = nn.BatchNorm1d(128)
+        
+        self.out = nn.Linear(128, num_classes)
+        
+        self.dropout = nn.Dropout(0.5) # Dropout para evitar memorización
+
+    def forward(self, x):
+        # Aplanar
+        x = x.view(x.size(0), -1) 
+        
+        # Capa 1
+        x = F.relu(self.bn1(self.fc1(x)))
+        x = self.dropout(x)
+        
+        # Capa 2
+        x = F.relu(self.bn2(self.fc2(x)))
+        x = self.dropout(x)
+        
+        # Capa 3
+        x = F.relu(self.bn3(self.fc3(x)))
+        
+        # Salida
+        x = self.out(x)
+        return x
+
+def create_simple_model(num_classes=14):
+    model = SimpleNN(num_classes=num_classes)
+    print(f"Modelo SimpleNN (416x416) creado.")
+    print(f"Neuronas de entrada: {model.flatten_size}")
+    return model
+```
+
+Las cualidades de la red que define el fragmento de código anterior son las siguientes:
+
+- **Tipo de Red:** La Red es un **Perceptrón Multicapa** (MLP) o Red Neuronal Densa.
+
+- Cálculo de neuronas de entrada: se realiza un `self.flatten_size`para calcular el número de neuronas de entradas son necesarias siguiendo el siguiente cálculo:
+
+    $$
+    \text{Neuronas Entrada} = \text{3 canales} \times (416*416)
+    $$
+
+- Número de capas embudo: La arquitectura va comprimiendo el número de neuronas en sucesivas capas:
+
+    - **Entrada masiva de datos:** Empieza con aproximadamente 519k neuronas.
+    - **Capa 1:** Se reduce el número de neuronas de manera drástica a 512.
+    - **Capa 2:** Se reduce a 256 neuronas.
+    - **Capa 3:** Se reduce a 128 neuronas.
+    - **Salida:** Salen 14 neuronas (una por cada clase definida por el conjunto de datos).
+
+- Entre cada una de las capas embudo se aplica también una regularización con dos valores importantes:
+
+    - `BatchNorm1d`: Normaliza los datos dentro de la red para estabilizar el aprendizaje.
+    - `Dropout(0.5)`: Apaga aleatoriamente el 50% de las neuronas durante el entrenamiento para evitar un **_overfitting_** (memorización) muy brusco por parte de la red.
+
+- La última parte relevante a comentar en la definición de la arquitectura de la red neuronal es el método `forward`, que aunque no pertenece a la arquitectura en sí, es necesaria dado que realiza lo siguiente:
+
+    - Se realiza un proceso de **_flattening_** o aplanamiento en el que entra un Batch (lote) de imágenes que *
 
 ## TIPOS DE REDES NEURONALES:
 
