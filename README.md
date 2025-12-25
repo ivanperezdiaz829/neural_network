@@ -41,6 +41,8 @@ Carpeta **Network_Convolutional** con sus contenidos:
     > results
         - grafica_accuracy_custom.png
         - grafica_accuracy.png
+        - grafica_juntos_custom.png
+        - grafica_juntos.png
         - grafica_loss_custom.png
         - grafica_loss.png
         - matriz_confusion_custom.png
@@ -368,7 +370,66 @@ Las cualidades de la red que define el fragmento de código anterior son las sig
 
 - La última parte relevante a comentar en la definición de la arquitectura de la red neuronal es el método `forward`, que aunque no pertenece a la arquitectura en sí, es necesaria dado que realiza lo siguiente:
 
-    - Se realiza un proceso de **_flattening_** o aplanamiento en el que entra un Batch (lote) de imágenes que *
+    - Se realiza un proceso de **_flattening_** o aplanamiento en el que entra un Batch (lote) de imágenes que **PyTorch** ve como un tensor 4D dado a que en las redes neuronales "densas" como la que se ha creado no existe una tendencia a lo ancho o a lo alto sino que solo entienden de listas largas de números. Esta línea aplana las dimensiones de la imagen
+
+    - A cada capa se aplica una función de activación no lineal (ReLu) que convierte todos los números negativos en 0 deja pasar a los positivos permitiendo a la red aprender formas complejas y no solo las líneas rectas.
+
+    - La salida NO tiene una función *Softmax*, se queda como números crudos (negativos o positivos) porque más adelante se usa `nn.CrossEntropyLoss` que aplica de manera interna un *Softmax* por lo que, si se pone el *Softmax* en esta salida se rompería el entrenamiento más adelante.
+
+Una vez creada la definición de la arquitectura, se busca el *device* disponible para intentar usar una gráfica CUDA si la hubiese, y posteriormente se muestra el *summary* del modelo cargado en el dispositivo:
+
+```raw
+--- Usando GPU: NVIDIA GeForce RTX 3060 Ti ---
+
+----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Linear-1                  [-1, 512]     265,814,528
+       BatchNorm1d-2                  [-1, 512]           1,024
+           Dropout-3                  [-1, 512]               0
+            Linear-4                  [-1, 256]         131,328
+       BatchNorm1d-5                  [-1, 256]             512
+           Dropout-6                  [-1, 256]               0
+            Linear-7                  [-1, 128]          32,896
+       BatchNorm1d-8                  [-1, 128]             256
+            Linear-9                   [-1, 14]           1,806
+================================================================
+Total params: 265,982,350
+Trainable params: 265,982,350
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 1.98
+Forward/backward pass size (MB): 0.02
+Params size (MB): 1014.64
+Estimated Total Size (MB): 1016.64
+----------------------------------------------------------------
+```
+
+Tras todo lo anterior, se empieza con el bucle de entrenamiento. Como se ha mencionado anteriormente, todos los entrenamientos realizados han ejecutado exactamente 50 épocas, en el caso del entrenamiento de esta red simple.
+
+Los hiperparámetros han sido:
+
+- **50 épocas** (aunque puede parar antes por la paciencia)
+- **_Learning Rate_** (Tasa de aprendizaje) del 0.001.
+- **Paciencia** de 10 épocas para detener el entrenamiento en caso de no haber mejora.
+
+El Optimizador y la función de pérdida:
+
+- `CrossEntropyLoss`: La fórmula estándar para medir el error en clasificación múltiple (Para más información véase: [CrossEntropyLoss, PyTorch](https://docs.pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html)).
+- `Adam`: El algoritmo que actualiza los pesos de la red para reducir el error (Para más información véase: [Adam, PyTorch](https://docs.pytorch.org/docs/stable/generated/torch.optim.Adam.html))
+- `ReduceLROnPlateau`: En el caso de que la red deje de mejorar, reduce el **_Learning Rate_** para intentar encontrar un mínimo más preciso (Para más información véase: [ReduceLROnPlateau, PyTorch](https://docs.pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html)). 
+
+El bucle para cada época:
+
+- Fase de *Train*: La red predice, calcula el error y hace backward (retroprogramación) para ajustar pesos.
+
+- Fase de *Validation*: La red predice sobre datos que nunca ha visto sin aprender de ellos solo para medir su rendimiento real.
+
+- **_Early Stopping_**: Si la precisión en la validación no mejora durante 10 épocas seguidas, el entrenamietno se detiene de manera prematura para ahorrar tiempo y evitar sobreajuste.
+
+En cuanto a los resultados del entrenamiento, se guardan dentro de un CSV y después, haciendo uso de dichos datos, se reconstruye un gráfico de la función de pérdida y de la precisión obtenida tal que:
+
+<img source="./Network_Convolutional/results/grafica_juntos.png">
 
 ## TIPOS DE REDES NEURONALES:
 
