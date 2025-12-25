@@ -429,7 +429,7 @@ El bucle para cada época:
 
 En cuanto a los resultados del entrenamiento, se guardan dentro de un CSV y después, haciendo uso de dichos datos, se reconstruye un gráfico de la función de pérdida y de la precisión obtenida tal que:
 
-<img source="./Network_Convolutional/results/grafica_juntos.png">
+<img src="./Network_Convolutional/results/grafica_juntos.png">
 
 ## TIPOS DE REDES NEURONALES:
 
