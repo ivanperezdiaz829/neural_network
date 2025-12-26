@@ -9,12 +9,13 @@
 - [Comparativa entre Redes Simples](#comparativa-entre-redes-simples)
 - [Comparativa entre Redes Convolucionales](#comparativa-entre-redes-convolucionales)
 - [Detector de YOLO con pruebas en vídeo](#detector-de-yolo-con-pruebas-en-vídeo)
+- [Fuentes y Documentación](#fuentes-y-documentación)
 
 ## DESCRIPCIÓN DEL PROYECTO
 
 El proyecto consiste en la **creación y posterior comparación** entre diferentes redes neuronales de diferentes tipos con el objetivo de llevar a cabo la clasificación de un grupo de imágenes obtenidas a partir de un DataSet de señales de tráfico extraído de **Kaggle** ([pkdarabi/cardetection](https://www.kaggle.com/datasets/pkdarabi/cardetection)).
 
-Se busca **comparar el rendimiento y desempeño** entre dos **redes neuronales simples** diferentes, además de comparar dos **CNNs** (*Convolutional Neural Networs*, Redes neuronales convolucionales) diferentes entre ellas y finalmente, comparar ambos tipos de redes para obtener una vista general y poder **sacar conclusiones al respecto**.
+Se busca **comparar el rendimiento y desempeño** entre dos **redes neuronales simples** diferentes, además de comparar dos **CNNs** (*Convolutional Neural Networks*, Redes neuronales convolucionales) diferentes entre ellas y finalmente, comparar ambos tipos de redes para obtener una vista general y poder **sacar conclusiones al respecto**.
 
 Como **última sección del proyecto**, se dispondrá de una Red entrenada haciendo uso del detector de imágenes [YOLO](https://docs.ultralytics.com/es/) con las mismas clases que se han entrenado los clasificadores anteriormente mencionados, esto es para obtener un resultado visual de detección de imagen en un vídeo con las clases de los clasificadores (*Computer Vision*) aunque sin uso más allá en la comparativa anteriormente mencionada entre los clasificadores basados en las redes simples y las CNNs.
 
@@ -893,7 +894,7 @@ Una vez entrenado el detector se aplica en cada frame del vídeo para obtener un
 
 ### **CANCIÓN**
 
-Adicionalmente, se ha creado una canción con Suno AI:
+Adicionalmente, se ha creado una [canción](./Network_YOLO/YOLO.mp3) con Suno AI:
 - https://drive.google.com/file/d/1I_AofIVKEJFz1Ctkm6tKBoN2TtxnousO/view?usp=sharing
 
 <div style="margin-left: 8ch;">
@@ -923,4 +924,21 @@ sí poooooooongo
 un valor bajo de learning rate.
 </div>
 
+## FUENTES Y DOCUMENTACIÓN
 
+- **Internet:** Se ha utilizado a la largo del proyecto para obtener información y leer la documentación oficial de **PyTorch** además de **Kaggle** para encontrar el DataSet con el que se ha trabajado.
+
+- **Inteligencia Artificial Generativa (ChatGPT, Gemini):** Se ha utilizado la IA para transformar algunas de las tablas generadas en el código a formato *Markdown* para el **README.md**, así como para realizar algunas preguntas sobre eficiencia en el entrenamiento de las propias redes neuronales.
+
+- **Enlaces:**
+
+    - https://drive.google.com
+    - https://www.kaggle.com
+    - https://pytorch.org
+    - https://docs.ultralytics.com/es/
+    - https://suno.com/home
+    - https://chatgpt.com/
+    - https://youtube.com/
+    - https://gemini.google.com
+
+<h4 style="text-weight: bold">Correo de contacto: ivanperezdiaz829@gmail.com</h4>
