@@ -7,7 +7,8 @@
 - [DataSet y Características](#dataset-y-características)
 - [Preparación del Entorno](#preparación-del-entorno)
 - [Comparativa entre Redes Simples](#comparativa-entre-redes-simples)
-- Comparativa de Redes Convolucionales.
+- [Comparativa entre Redes Convolucionales](#comparativa-entre-redes-convolucionales)
+- [Comparativa general entre Redes]
 - Detector de YOLO con pruebas en vídeo.
 
 ## DESCRIPCIÓN DEL PROYECTO
@@ -60,6 +61,8 @@ Carpeta **Network_Simple** con sus contenidos:
     > results
         - grafica_accuracy_simple1.png
         - grafica_accuracy_simple2.png
+        - grafica_juntos_simple1.png
+        - grafica_juntos_simple2.png
         - grafica_loss_simple1.png
         - grafica_loss_simple2.png
         - matriz_confusion_simple1.png
@@ -297,7 +300,6 @@ A continuación y en otro fragmento, se aplica al conjunto de datos la modificac
 Con los preparativos previos, la definición del **Modelo SimpleNN** que define el cerebro artificial de la arquitectura queda de la siguiente manera:
 
 ```python
-# === FRAGMENTO 4 ===
 class SimpleNN(nn.Module):
     def __init__(self, num_classes=14):
         super(SimpleNN, self).__init__()
@@ -429,15 +431,252 @@ El bucle para cada época:
 
 En cuanto a los resultados del entrenamiento, se guardan dentro de un CSV y después, haciendo uso de dichos datos, se reconstruye un gráfico de la función de pérdida y de la precisión obtenida tal que:
 
-<img src="./Network_Convolutional/results/grafica_juntos.png">
+<img src="./Network_Simple/results/grafica_accuracy_simple1.png">
+<img src="./Network_Simple/results/grafica_loss_simple1.png">
 
-## TIPOS DE REDES NEURONALES:
+En las gráficas se puede apreciar como al principio la red entrena bien pero a partir de aproximadamente la época 20 empieza un **_overfitting_** o memorización que impide que la red siga aprendiendo, no obstante los datos del accuracy obtenidos, para una red neuronal simple son previsibles dado que suelen oscilar entre un 40-50% de precisión.
 
-<h4 style="text-decoration: underline; font-weight: bold">Simple Network:</h4>
+En cuanto a la evaluación del modelo total y la matriz de confusión, los datos obtenidos del modelo son los siguientes:
 
-<div style="margin-left: 8ch;">
-Para el primer diseño hemos creado una red neuronal con dos capas ocultas (512 y 128 neuronas), y una capa de salida de 15 clases. Como función de activación hemos usado la sigmoide puesto que fue la que vimos en primer lugar en clase de teoría, y en la capa de salida aplicamos softmax. 
-</div>
+### **Resultados de la evaluación (Test Simple-1)**
+
+| Clase | Precision | Recall | F1-score | Support |
+|:-----:|:---------:|:------:|:------:|:-------:|
+| 0  | 0.46 | 0.28 | 0.35 | 69 |
+| 1  | 0.40 | 0.61 | 0.48 | 56 |
+| 2  | 0.29 | 0.44 | 0.35 | 41 |
+| 3  | 0.29 | 0.10 | 0.15 | 20 |
+| 4  | 0.42 | 0.49 | 0.45 | 35 |
+| 5  | 0.86 | 0.96 | 0.91 | 45 |
+| 6  | 0.51 | 0.52 | 0.51 | 56 |
+| 7  | 0.20 | 0.26 | 0.22 | 47 |
+| 8  | 0.50 | 0.44 | 0.47 | 45 |
+| 9  | 0.52 | 0.53 | 0.53 | 43 |
+| 10 | 0.70 | 0.55 | 0.62 | 47 |
+| 11 | 0.44 | 0.36 | 0.40 | 55 |
+| 12 | 0.17 | 0.17 | 0.17 | 30 |
+| 13 | 0.89 | 0.68 | 0.77 | 47 |
+| **Accuracy** | — | — | **0.47** | **636** |
+| **Macro avg** | 0.48 | 0.46 | 0.46 | 636 |
+| **Weighted avg** | 0.49 | 0.47 | 0.47 | 636 |
+
+<img src="./Network_Simple/results/matriz_confusion_simple1.png">
+
+En cuanto a la segunda red neuronal simple, los cambios respecto a la red neuronal simple anterior son:
+
+- La carga de datos de entrenamiento a la que se le aplican en esta red muchos parámetros para complicar el conjunto:
+
+```python
+train_transform = transforms.Compose([
+    transforms.Resize(IMAGE_SIZE),
+    transforms.RandomHorizontalFlip(p=0.5), 
+    transforms.RandomRotation(degrees=15), 
+    transforms.ColorJitter(brightness=0.2, contrast=0.2),
+    transforms.Grayscale(num_output_channels=3),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+])
+```
+
+- La definición de la arquitectura del proyecto es diferente, en este caso es tal que:
+
+```python
+class SimpleNN(nn.Module):
+    def __init__(self, num_classes=14):
+        super(SimpleNN, self).__init__()
+        
+        # Cálculo automático del tamaño aplanado
+        self.flatten_size = 3 * 416 * 416 
+        
+        # Arquitectura Piramidal (Reduciendo progresivamente)
+        self.fc1 = nn.Linear(self.flatten_size, 512)    # Bajar a 128 para controlar entrada
+        self.bn1 = nn.BatchNorm1d(512)
+        
+        self.fc2 = nn.Linear(512, 256)                  # Cuello de botella invertido (ayuda a mezclar features)
+        self.bn2 = nn.BatchNorm1d(256)
+        
+        self.fc3 = nn.Linear(256, 128)
+        self.bn3 = nn.BatchNorm1d(128)
+
+        self.fc4 = nn.Linear(128, 64)
+        self.bn4 = nn.BatchNorm1d(64)
+        
+        self.out = nn.Linear(64, num_classes)
+        
+        self.dropout = nn.Dropout(0.5) # Dropout para evitar memorización
+
+    def forward(self, x):
+        # Aplanar
+        x = x.view(x.size(0), -1) 
+        
+        # Capa 1
+        x = F.relu(self.bn1(self.fc1(x)))
+        x = self.dropout(x)
+        
+        # Capa 2
+        x = F.relu(self.bn2(self.fc2(x)))
+        x = self.dropout(x)
+        
+        # Capa 3
+        x = F.relu(self.bn3(self.fc3(x)))
+        x = self.dropout(x)
+
+        # Capa 4
+        x = F.relu(self.bn4(self.fc4(x)))
+        
+        # Salida
+        x = self.out(x)
+        return x
+
+def create_simple_model(num_classes=14):
+    model = SimpleNN(num_classes=num_classes)
+    print(f"Modelo SimpleNN (416x416) creado.")
+    print(f"Neuronas de entrada: {model.flatten_size}")
+    return model
+```
+
+En donde el cambio principal reside en que tiene una capa extra que la red simple anteriormente mencionada.
+
+En cuanto al *summary* de la arquitectura cargada dentro de la tarjeta gráfica para el entrenamiento (mismo procedimiento que el explicado en la primera red simple), se tiene lo siguiente:
+
+```raw
+--- Usando GPU: NVIDIA GeForce RTX 3060 Ti ---
+
+----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Linear-1                  [-1, 512]     265,814,528
+       BatchNorm1d-2                  [-1, 512]           1,024
+           Dropout-3                  [-1, 512]               0
+            Linear-4                  [-1, 256]         131,328
+       BatchNorm1d-5                  [-1, 256]             512
+           Dropout-6                  [-1, 256]               0
+            Linear-7                  [-1, 128]          32,896
+       BatchNorm1d-8                  [-1, 128]             256
+           Dropout-9                  [-1, 128]               0
+           Linear-10                   [-1, 64]           8,256
+      BatchNorm1d-11                   [-1, 64]             128
+           Linear-12                   [-1, 14]             910
+================================================================
+Total params: 265,989,838
+Trainable params: 265,989,838
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 1.98
+Forward/backward pass size (MB): 0.02
+Params size (MB): 1014.67
+Estimated Total Size (MB): 1016.67
+----------------------------------------------------------------
+```
+
+En cuanto al bucle de entrenamiento, se diferencia al de la primera red neuronal en los siguientes puntos:
+
+- `AdamW`: Utiliza este optimizador que además posee un parámetro llamado `WEIGHT_DECAY` que añade una penalización matemática si los pesos de la red crecen demasiado, obligando a la red a mantener sus conexiones "simples" (Para más información véase: [AdamW, PyTorch](https://docs.pytorch.org/docs/stable/generated/torch.optim.AdamW.html))
+
+- A la función de pérdida `nn.CrossEntropyLoss`se le agrega un *label_smothing* para que no tenga que estar al 100% seguro para clasificar una imagen dentro de una clase por lo que en este caso concreto, clasifica con un 90% de seguridad.
+
+- **_Gradient Clipping_**: Aplica un freno de seguridad, revisa si el peso es demasiado grande y si lo es recorta su tamaño a un máximo de 1.0 para procurar un aprendizaje suave y estable.
+
+Tras todo lo mencionado, la tabla de diferencias entre ambos procesos de entrenamiento queda de la siguiente manera:
+
+| Característica | Primera Red Neuronal | Segunda Red Neuronal | Efecto en la Red |
+| :--- | :--- | :--- | :--- |
+| **Optimizador** | `Adam` | `AdamW` + `Weight Decay` | El segundo evita mejor la memorización (*overfitting*). |
+| **Objetivo (Loss)** | Estricto (0 vs 1) | Suavizado (0.1 vs 0.9) | El segundo generaliza mejor ante datos nuevos. |
+| **Estabilidad** | Ninguna | `Gradient Clipping` | El segundo evita "explosiones" de error que rompen el entrenamiento. |
+| **Archivos** | `_simple1` | `_simple2` | Permite guardar historiales de experimentos distintos. |
+
+En cuanto a los resultados del entrenamiento, se guardan y procesan de la misma manera exacta que en la primera red neuronal, y las gráficas con los resultados obtenidos son las siguientes:
+
+<img src="./Network_Simple/results/grafica_accuracy_simple2.png">
+<img src="./Network_Simple/results/grafica_loss_simple2.png">
+
+Las gráficas dejan ver un suceso extraño que no suele ocurrir llamado **_under-fitting_** en donde las pruebas de validación muestran mejor precisión que el propio entrenamiento, esto seguramente ha sucedido debido a la dificultad extra y las modificaciones aplicadas al conjunto de entrenamiento a la hora de cargarlo.
+
+En cuanto a la evaluación del modelo total y la matriz de confusión, los datos obtenidos del modelo son los siguientes:
+
+### **Resultados de la evaluación (Test Simple-2)**
+
+| Clase | Precision | Recall | F1-score | Support |
+|:-----:|:---------:|:------:|:--------:|:-------:|
+| 0  | 0.45 | 0.48 | 0.46 | 69 |
+| 1  | 0.40 | 0.57 | 0.47 | 56 |
+| 2  | 0.39 | 0.34 | 0.36 | 41 |
+| 3  | 0.00 | 0.00 | 0.00 | 20 |
+| 4  | 0.46 | 0.31 | 0.37 | 35 |
+| 5  | 0.74 | 0.96 | 0.83 | 45 |
+| 6  | 0.35 | 0.46 | 0.40 | 56 |
+| 7  | 0.21 | 0.23 | 0.22 | 47 |
+| 8  | 0.45 | 0.20 | 0.28 | 45 |
+| 9  | 0.51 | 0.42 | 0.46 | 43 |
+| 10 | 0.59 | 0.55 | 0.57 | 47 |
+| 11 | 0.22 | 0.40 | 0.28 | 55 |
+| 12 | 0.00 | 0.00 | 0.00 | 30 |
+| 13 | 0.87 | 0.70 | 0.78 | 47 |
+| **Accuracy** | — | — | **0.44** | **636** |
+| **Macro avg** | 0.40 | 0.40 | 0.39 | 636 |
+| **Weighted avg** | 0.43 | 0.44 | 0.42 | 636 |
+
+<img src="./Network_Simple/results/matriz_confusion_simple2.png">
+
+Tras analizar los datos de los resultados, se puede apreciar que pese al todo el preprocesado de datos y las modificaciones futuras, se consigue en la segunda red neuronal simple un peor desempeño global que en la primera red neuronal simple.
+
+Las gráficas de comparación unas al lado de las otras quedan tal que:
+
+<img src="./Network_Simple/results/grafica_juntos_simple1.png">
+<img src="./Network_Simple/results/grafica_juntos_simple2.png">
+
+## COMPARATIVA ENTRE REDES CONVOLUCIONALES
+
+En las redes neuronales convolucionales, todo el proceso del principio de la carga de datos está calcado al de las redes simples, en este caso, la [primera red convolucional](./Network_Convolutional/Network_Convolutional.ipynb) usa la carga de datos de la primera red convolucional simple.
+
+Esta Red Convolucional se caracteriza por utilizar **_Transfer Learning_**, concretamente por cargar un modelo `ResNet50`que carga una CNN con 50 capas preentrenadas. De manera adicional, dicha red no se carga con los pesos aleatorios sino con la memoria de haber visto 1.2 millones de imágenes de *ImageNet* por lo que ya sabe perfectamente lo que es una curva, una textura metálica, un coche, etc. Para más información acerca de la `ResNet` véase: [ResNet, PyTorch](https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet50.html).
+
+La definición de la arquitectura de la red neuronal convolucional con el `ResNet` es congelar la actualización de los pesos de todas las capas (*freezing*) y en la última capa que es una *Fully Connected* que originalmente tiene 1000 salidas, se arranca y se pone una nueva capa lineal con las 14 salidas de las clases del DataSet que sí entrenará mientras el resto sigue congelado.
+
+Todo este proceso de definición de arquitectura viene dado por el siguiente código:
+
+```python
+def create_model(num_classes=14):
+    # 1. Cargar ResNet50 pre-entrenado en ImageNet
+    model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+
+    # 2. Congelar todos los pesos del modelo
+    # No se quiere re-entrenar las capas que ya saben detectar bordes, texturas, etc.
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # 3. Reemplazar la capa final (el "clasificador")
+    # Obtiene las características de entrada de la última capa
+    num_ftrs = model.fc.in_features
+
+    # Crear una nueva capa final que SÍ se va a entrenar
+    # La salida debe ser 14 (las clases corregidas)
+    model.fc = nn.Linear(num_ftrs, num_classes)
+    
+    print("Modelo ResNet50 pre-entrenado cargado.")
+    print("Todas las capas congeladas, excepto la capa final (model.fc).")
+    
+    return model
+```
+
+En cuanto al bucle de entrenamiento, se realiza un entrenamiento dinámico que se divide en dos etapas:
+
+- La primera de ellas consiste en 15 épocas (*Head Training*) en donde se usa el optimizador `AdamW` con un *Learning Rate* más alto. El objetivo de esta etapa es hacer un "entrenamiento rápido" para posteriormente en la siguiente etapa tener una base sólida sobre la que trabajar.
+
+- La segunda etapa consiste en 35 épocas (*Fine Tunning*) en donde se usa el mismo optimizador que la primera etapa pero con un *Learning Rate* mucho más bajo para ir refinando los pesos, mejorando así la red general.
+
+- El entrenamiento también posee un **_Early Stopping_** con una paciencia de 15 épocas.
+
+En la tabla de abajo se aprecian las diferencias generales entre ambas etapas de entrenamiento:
+
+| Característica | Fase 1 (Head) | Fase 2 (Fine-Tuning) |
+| :--: | :--: | :--: |
+| **Objetivo** | Entrenar el clasificador nuevo. | Refinar toda la red para adaptarla a los detalles específicos. |
+| **Capas Entrenables** | Solo la última capa (`model.fc`). | Todas las capas (ResNet completa + `model.fc`). |
+| **Velocidad de Aprendizaje** | Alta (`0.001`) para aprender rápido desde cero. | Muy Baja (`0.00001`) para no romper lo aprendido. |
+| **Riesgo** | Bajo. | Alto (riesgo de "olvido catastrófico" si el LR es alto). |
+| **Duración** | Corta (15 épocas). | Larga (35 épocas). |
 
 
 ## DETECTOR DE YOLO CON PRUEBAS EN VÍDEO
