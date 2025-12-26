@@ -1,4 +1,4 @@
-# **NEURONAL NETWORKS**
+# **NEURAL NETWORKS**
 
 ## ÍNDICE
 
@@ -8,8 +8,7 @@
 - [Preparación del Entorno](#preparación-del-entorno)
 - [Comparativa entre Redes Simples](#comparativa-entre-redes-simples)
 - [Comparativa entre Redes Convolucionales](#comparativa-entre-redes-convolucionales)
-- [Comparativa general entre Redes]
-- Detector de YOLO con pruebas en vídeo.
+- [Detector de YOLO con pruebas en vídeo](#detector-de-yolo-con-pruebas-en-vídeo)
 
 ## DESCRIPCIÓN DEL PROYECTO
 
@@ -621,7 +620,7 @@ En cuanto a la evaluación del modelo total y la matriz de confusión, los datos
 
 Tras analizar los datos de los resultados, se puede apreciar que pese al todo el preprocesado de datos y las modificaciones futuras, se consigue en la segunda red neuronal simple un peor desempeño global que en la primera red neuronal simple.
 
-Las gráficas de comparación unas al lado de las otras quedan tal que:
+Las gráficas de comparación entre las redes quedan tal que:
 
 <img src="./Network_Simple/results/grafica_juntos_simple1.png">
 <img src="./Network_Simple/results/grafica_juntos_simple2.png">
@@ -678,12 +677,223 @@ En la tabla de abajo se aprecian las diferencias generales entre ambas etapas de
 | **Riesgo** | Bajo. | Alto (riesgo de "olvido catastrófico" si el LR es alto). |
 | **Duración** | Corta (15 épocas). | Larga (35 épocas). |
 
+Tras lo anterior, los resultados del entrenamiento y de manera similar a los datos obtenidos y procesados en las redes simples, se crean gráficas con los datos obtenidos.
+
+<img src="./Network_Convolutional/results/grafica_accuracy.png">
+<img src="./Network_Convolutional/results/grafica_loss.png">
+
+Las gráficas muestra un entrenamiento con un poco de **_Overfitting_** pero con un rendimiento general muy bueno, llegando a un *accuracy* y pérdida muy buenos mostrando que el entrenamiento ha sido exitoso. No obstante, se puede ver como al final de la gráfica ya la tendencia no es de crecimiento por lo que no parece que se pudieran obtener resultados mucho mejores con más épocas.
+
+En cuanto a la evaluación del modelo total y la matriz de confusión, los datos obtenidos del modelo son los siguientes:
+
+### **Resultados de la evaluación (Test Conv-1)**
+
+| Clase | Precision | Recall | F1-score | Support |
+|:-----:|:---------:|:------:|:--------:|:-------:|
+| 0  | 0.94 | 0.90 | 0.92 | 69 |
+| 1  | 0.90 | 0.95 | 0.92 | 56 |
+| 2  | 0.78 | 0.78 | 0.78 | 41 |
+| 3  | 0.92 | 0.60 | 0.73 | 20 |
+| 4  | 0.74 | 0.74 | 0.74 | 35 |
+| 5  | 0.96 | 0.96 | 0.96 | 45 |
+| 6  | 0.89 | 0.89 | 0.89 | 56 |
+| 7  | 0.83 | 0.94 | 0.88 | 47 |
+| 8  | 0.90 | 0.80 | 0.85 | 45 |
+| 9  | 0.73 | 0.74 | 0.74 | 43 |
+| 10 | 0.78 | 0.85 | 0.82 | 47 |
+| 11 | 0.85 | 0.95 | 0.90 | 55 |
+| 12 | 0.72 | 0.60 | 0.65 | 30 |
+| 13 | 0.96 | 0.96 | 0.96 | 47 |
+| **Accuracy** | — | — | **0.86** | **636** |
+| **Macro avg** | 0.85 | 0.83 | 0.84 | 636 |
+| **Weighted avg** | 0.86 | 0.86 | 0.86 | 636 |
+
+<img src="./Network_Convolutional/results/matriz_confusion.png">
+
+Los resultados de la red convolucional usando *Transfer Learning* dan a ver que se consigue mucho rendimiento utilizando esta técnica.
+
+En cuanto a la [segunda red neuronal convolucional](./Network_Convolutional/Network_Convolutional2.ipynb), en esta no se usa *Transfer Learning* y es necesario entrenar todo desde 0.
+
+Para el entrenamiento, en cuanto a la creación de la definición de la arquitectura de dicha red neuronal se define a partir del siguiente código:
+
+```python
+class SmartCNN(nn.Module):
+    def __init__(self, num_classes=14):
+        super(SmartCNN, self).__init__()
+        
+        # Bloques Convolucionales para extraer características
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)   # Normaliza los lotes para mejorar el orden de la red
+        self.pool = nn.MaxPool2d(2, 2)
+        
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(128)
+        
+        self.conv4 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        self.bn4 = nn.BatchNorm2d(256)
+        
+        self.conv5 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        self.bn5 = nn.BatchNorm2d(512)
+        
+        # AdaptiveAvgPool2d((1, 1)) fuerza la salida a ser 1x1 espacialmente sin importar el tamaño de entrada.
+        # Convierte (Batch, 512, 13, 13) -> (Batch, 512, 1, 1)
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+        
+        # Entrada de 512 debido a la última capa convolucional
+        self.fc1 = nn.Linear(512, 256) 
+        self.dropout = nn.Dropout(0.4)
+        self.fc2 = nn.Linear(256, num_classes)
+
+    def forward(self, x):
+        # Extracción de características
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = self.pool(F.relu(self.bn3(self.conv3(x))))
+        x = self.pool(F.relu(self.bn4(self.conv4(x))))
+        x = self.pool(F.relu(self.bn5(self.conv5(x))))
+        
+        # Pooling Global
+        x = self.global_pool(x)
+        
+        # Aplanar: (Batch, 512, 1, 1) -> (Batch, 512)
+        x = x.view(x.size(0), -1) 
+        
+        # Clasificación
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        
+        return x
+
+def create_model(num_classes=14):
+    model = SmartCNN(num_classes=num_classes)
+    print("Modelo SmartCNN (con GAP) creado.")
+    return model
+```
+
+Las diferentes característica de la definición de la arquitectura son:
+
+- `Conv2d`: Es la convolución que escanea la imagen buscando patrones, empieza con 32 filtros (bordes simples) y termina con 512 filtros (conceptos complejos).
+
+- `BatchNorm2d`: Normaliza los datos después de cada convolución y es vital cuando se entrena desde cero porque evita que la red se desestabilice permitiendo así que aprenda mucho más rápido.
+
+- `MaxPool2d`: Reduce el tamaño de la imagen a la mitad en cada paso.
+
+- `nn.AdaptativeAvgPool2d`: Como la última capa tiene tantos valores, haciendo uso de este método se calcula el promedio de todos los pixeles y los convierte en un solo número 1x1 (Para más información véase: [AdaptativeAvgPool2d, PyTorch](https://docs.pytorch.org/docs/stable/generated/torch.nn.AdaptiveAvgPool2d.html))
+
+Además, se ha activado un *dropout* del 40% para intentar evitar demasiado *overfitting*.
+
+En cuanto al bucle de entrenamiento, se vuelve al método de un entrenamiento monolítico con las 50 épocas juntas y sin diferenciar entre las dos etapas usadas en la CNN anterior. Las característica del entrenamiento son:
+
+- **_Scheduler_** (`ReduceLROnPlateau`): Si la red se estanca, reduce la velocidad de aprendizaje, cosa que es útil para afinar los detalles finales.
+
+- **_Early Stopping_**: Si pasan 10 épocas sin mejora se detiene el entrenamiento para no perder tiempo.
+
+Las gráficas obtenidas a partir del entrenamiento anterior son las siguientes:
+
+<img src="./Network_Convolutional/results/grafica_accuracy_custom.png">
+<img src="./Network_Convolutional/results/grafica_loss_custom.png">
+
+En las gráficas se puede apreciar como el entrenamiento se ha hecho de manera muy sólida y que la tendencia de la gráfica sigue aumentando en calidad por lo que se deduce que con más épocas seguiría mejorando mucho el rendimiento.
+
+En cuanto a la evaluación de la red y su matriz de confusión:
+
+### Resultados de la evaluación (Test)
+
+| Clase | Precision | Recall | F1-score | Support |
+|:-----:|:---------:|:------:|:--------:|:-------:|
+| 0  | 0.73 | 0.70 | 0.71 | 69 |
+| 1  | 0.55 | 0.75 | 0.64 | 56 |
+| 2  | 0.38 | 0.34 | 0.36 | 41 |
+| 3  | 0.42 | 0.25 | 0.31 | 20 |
+| 4  | 0.46 | 0.49 | 0.47 | 35 |
+| 5  | 0.72 | 0.96 | 0.82 | 45 |
+| 6  | 0.32 | 0.41 | 0.36 | 56 |
+| 7  | 0.52 | 0.49 | 0.51 | 47 |
+| 8  | 0.63 | 0.27 | 0.38 | 45 |
+| 9  | 0.51 | 0.42 | 0.46 | 43 |
+| 10 | 0.50 | 0.43 | 0.46 | 47 |
+| 11 | 0.38 | 0.58 | 0.46 | 55 |
+| 12 | 0.54 | 0.23 | 0.33 | 30 |
+| 13 | 0.95 | 0.81 | 0.87 | 47 |
+| **Accuracy** | — | — | **0.54** | **636** |
+| **Macro avg** | 0.54 | 0.51 | 0.51 | 636 |
+| **Weighted avg** | 0.55 | 0.54 | 0.53 | 636 |
+
+<img src="./Network_Convolutional/results/matriz_confusion_custom.png">
+
+Si bien es cierto que los resultados apreciables en esta CNN no distan mucho de los obtenidos por la mejor red neuronal simple, la gráfica y la tendencia a diferencia de dicha red es seguir mejorando con el tiempo, por lo que aunque las gráficas sean parecidas, el potencial de mejora de la CNN es mucho mayor al de las redes simples las cuáles al final de las 50 épocas ya se encontraban estancadas.
+
+Entre las dos CNNs creadas, además de las diferencias de rendimiento cabe mencionar que cada una tiene un tipo de uso estandarizado en donde son más eficaces que en otros ámbitos.
+
+Resumen Comparativo entren la **SmartCNN** y la **ResNet** con *Transfer Learning*:
+
+| Característica | SmartCNN | ResNet50 |
+| :--: | :--: | :--: |
+| **Origen** | Creada desde cero (Tabula Rasa). | Pre-entrenada con *ImageNet*. |
+| **Peso del archivo** | Muy ligero (~5MB - 20MB). | Pesado (~100MB+). |
+| **Datos necesarios** | Requiere **muchas** imágenes para aprender bien. | Funciona genial con **pocas** imágenes. |
+| **Tiempo de entreno** | Rápido por época (menos capas), pero necesita muchas épocas. | Lento por época (red gigante), pero converge en pocas épocas. |
+| **Uso ideal** | Cuando se tienen millones de datos o una tarea muy específica (ej. imágenes médicas, satélite) que no se parecen a las fotos normales. | La opción por defecto para casi cualquier tarea de visión artificial estándar. |
+
+Las gráficas de comparación entre las redes neuronales quedan tal que:
+
+<img src="./Network_Convolutional/results/grafica_juntos.png">
+<img src="./Network_Convolutional/results/grafica_juntos_custom.png">
 
 ## DETECTOR DE YOLO CON PRUEBAS EN VÍDEO
 
-## CANCIÓN:
+Como parte adicional al proyecto se ha decidido entrenar una red neuronal con YOLO para detectar las clases en un vídeo que venía dentro del DataSet utilizado durante todo el proyecto, dicho vídeo se puede encontrar dentro del proyecto *clickando* en el [enlace](./Network_YOLO/Resources/test.mp4).
 
-A modo de resumen hemos escrito esta letra y generado una canción sobre la práctica con la ayuda de Suno AI:
+Para esta parte del proyecto se ha hecho uso del modelo [YOLO-11](https://docs.ultralytics.com/es/models/yolo11/) de ultralytics.
+
+Cabe mencionar que para el correcto funcionamiento del entrenamiento es necesario el fichero de definición .yaml con toda la información necesaria. Dicho fichero ([data.yaml](./Network_YOLO/data.yaml)) contiene lo siguiente:
+
+```yaml
+train: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/train/images
+val: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/valid/images
+test: C:/Users/ivanp/Desktop/traffic_signals_without_10/TGC_RBNW/test/images
+
+nc: 14
+names: [
+  'Green Light', 'Red Light', 'Speed Limit 100', 'Speed Limit 110',
+  'Speed Limit 120', 'Speed Limit 20', 'Speed Limit 30', 'Speed Limit 40',
+  'Speed Limit 50', 'Speed Limit 60', 'Speed Limit 70', 'Speed Limit 80',
+  'Speed Limit 90', 'Stop'
+]
+```
+
+El entrenamiento en sí del detector es el siguiente:
+
+```python
+# === ENTRENAMIENTO DEL MODELO ===
+print("Iniciando entrenamiento del modelo")
+model = YOLO("yolo11m.pt")
+
+results = model.train(
+    data="data.yaml",               # Ruta al archivo de configuración de datos
+    imgsz=640,                      # Tamaño de las imágenes (Se reescalan para más eficiencia)
+    epochs=50,                      # Número de épocas de entrenamiento
+    project="runs/train_custom",    # Directorio donde se guardarán los resultados
+    name="exp1",                    # Nombre del entrenamiento
+    exist_ok=True,                  # Sobrescribir si el directorio ya existe
+    plots=True                      # Generar gráficos de métricas durante el entrenamiento
+)
+print("Entrenamiento completado.")
+```
+
+Una vez entrenado el detector se aplica en cada frame del vídeo para obtener un output con el vídeo procesado.
+
+### **Vídeo procesado con el detector**
+
+[![Ver en YouTube](https://img.youtube.com/vi/RAZaADUnYSg/0.jpg)](https://www.youtube.com/watch?v=RAZaADUnYSg)
+
+### **CANCIÓN**
+
+Adicionalmente, se ha creado una canción con Suno AI:
 - https://drive.google.com/file/d/1I_AofIVKEJFz1Ctkm6tKBoN2TtxnousO/view?usp=sharing
 
 <div style="margin-left: 8ch;">
@@ -712,3 +922,5 @@ qué lento entrena la red neuronal,
 sí poooooooongo  
 un valor bajo de learning rate.
 </div>
+
+
